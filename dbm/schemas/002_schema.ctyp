@@ -1,0 +1,30 @@
+def_tag:'update';
+
+self->(addField:
+	-table	=	'myNewTable',
+	-name	=	'fred',
+	-type	=	'string',
+	-size	=	'12');
+
+
+
+
+
+/def_tag;
+
+
+
+
+def_tag:'rollback';
+
+
+self->(removeField:
+	-table = 	'myNewTable',
+	-name	=	'fred');
+
+
+
+
+
+
+/def_tag;

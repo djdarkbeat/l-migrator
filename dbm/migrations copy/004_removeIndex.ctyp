@@ -1,0 +1,25 @@
+﻿<?lassoscript
+
+define_type:'004_removeIndex', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+define_tag:'update';
+
+	self->(removeIndex:
+		-table		= 'myNewTable',
+		-name		= 'rcrdNo');
+
+/define_tag;
+
+//------------------------------------------------------------------------------
+define_tag:'rollback';
+
+	self->(addIndex:
+		-table		= 'myNewTable',
+		-name		= 'rcrdNo',
+		-field		= 'rcrdNo');
+
+
+/define_tag;
+/define_type;
+?>

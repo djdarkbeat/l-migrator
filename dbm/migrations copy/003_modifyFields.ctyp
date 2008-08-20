@@ -1,0 +1,46 @@
+﻿<?lassoscript
+
+define_type:'003_modifyFields', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+define_tag:'update';
+
+	self->'tblName' = 'myNewTable';
+	
+	self->(renameField:
+		-fromName	= 'payee',
+		-toName		= 'checkTo',
+		-type		= 'string',
+		-size		= '12');
+
+	self->(modifyField:
+		-name		= 'checkAmt',
+		-type		= 'decimal',
+		-precision	= '8',
+		-scale		= '2',
+		-unsigned	= true);
+
+/define_tag;
+
+//------------------------------------------------------------------------------
+define_tag:'rollback';
+
+	self->'tblName' = 'myNewTable';
+
+	self->(modifyField:
+		-name		= 'checkAmt',
+		-type		= 'decimal',
+		-precision	= '6',
+		-scale		= '2',
+		-unsigned	= true);
+
+	self->(renameField:
+		-table		= 'myNewTable',
+		-fromName	= 'checkTo',
+		-toName		= 'payee',
+		-type		= 'string',
+		-size		= '12');
+
+/define_tag;
+/define_type;
+?>

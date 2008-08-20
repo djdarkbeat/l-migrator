@@ -1,0 +1,351 @@
+﻿<?lassoscript
+
+define_type:'migrationEngine';
+
+	local:
+		'classPath'			= string,
+		'adaptorName'		= string,
+		'dbName'			= string,
+		'tblName'			= string;
+
+	local:
+		'dbConfigs'				= map,
+		'tableNames'			= array,
+		'currentVersion' 		= integer,
+		'firstMigration' 		= integer,
+		'lastMigration' 		= integer,
+		'migrateToVersion'		= integer,
+		'migrationClassFiles'	= array,
+		'migrationClassNames'	= array,
+		'allQueryStatements'	= array,
+		'allQueryErrors'		= array;
+		
+
+//==============================================================================
+//	->onCreate
+//
+//	converts inputs into instance vars
+//	triggers the loading and processing of migration files
+//------------------------------------------------------------------------------
+
+define_tag:'onCreate',
+	-required = 'path',			-type = 'string',
+	-required = 'adaptor',		-type = 'string',
+	-required = 'db',			-type = 'string';
+
+	self->'classPath'			= #path;
+	self->'adaptorName'			= #adaptor;
+	self->'dbName'				= #db;
+/define_tag;
+
+
+//==============================================================================
+//	->getTableNames
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'getTableNames';
+	inline: 
+		-database	= (self->'dbName'),
+		-sql		= 'SHOW TABLES';
+		records;
+			(self->'tableNames')->(insert: (field: (field_names->first)));
+		/records;
+	/inline;
+	return: (self->'tableNames');
+/define_tag;
+
+
+//==============================================================================
+//	->getCurrentVersion
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'getCurrentVersion';
+
+	inline:
+		-database 	= (self->'dbName'),
+		-table 		= '_schemaInfo',
+		-findAll;
+
+		(self->'currentVersion') = integer:(field:'version');
+
+	/inline;
+
+/define_tag;
+
+
+//==============================================================================
+//	->findMigrationLimits
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'findMigrationLimits';
+
+	!(self->'migrationClassNames')
+		? self->loadClasses;
+
+	local:
+		'firstMigration' 	= (self->'migrationClassNames')->get:1,
+		'lastMigration' 	= (self->'migrationClassNames')->last;
+
+	#firstMigration	= (#firstMigration->split:'_')->get:1;
+	#lastMigration 	= (#lastMigration->split:'_')->get:1;
+
+	(self->'firstMigration') = integer:#firstMigration;
+	(self->'lastMigration')  = integer:#lastMigration;
+
+/define_tag;
+
+//==============================================================================
+//	->loadClasses
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'loadClasses';
+
+	local:
+		'migrationClassFile'	= string,
+		'migrationClassName'	= string,
+		'migrationVersion'		= integer;
+
+	(self->'migrationClassFiles') = array;
+	(self->'migrationClassNames') = array;
+
+	inline;
+		(self->'migrationClassFiles') = (file_listDirectory: self->'classPath');
+	/inline;
+
+	iterate: (self->'migrationClassFiles'), #migrationClassFile;
+		#migrationClassName = (#migrationClassFile->(split:'.'))->get:1;
+		#migrationVersion = integer:((#migrationClassName->(split:'_'))->get:1);
+		if: ((#migrationClassFile - #migrationClassName) == '.ctyp');
+			(self->'migrationClassNames')->(insert:#migrationClassName);
+		/if;
+	/iterate;
+/define_tag;
+
+
+//==============================================================================
+//	->run
+//
+//	converts inputs into instance vars
+//	triggers the loading and processing of migration files
+//------------------------------------------------------------------------------
+
+define_tag:'run',
+	-required = 'migrateTo';	// integer or string
+
+	(self->'migrateToVersion') = math_abs:(integer:(#migrateTo));
+	self->getCurrentVersion;
+
+	if: ((self->'migrateToVersion') > 0) && ((self->'currentVersion') >= 0);
+		self->loadClasses;
+		self->findMigrationLimits;
+
+		if: (self->'migrateToVersion') >= (self->'firstMigration')
+			&& (self->'migrateToVersion') <= (self->'lastMigration');
+
+			if: (self->'currentVersion') < (self->'migrateToVersion');
+				self->updateSchema;
+			else: (self->'currentVersion') > (self->'migrateToVersion');
+				(self->'migrationClassNames')->(sort:false);
+				self->rollbackSchema;
+			/if;
+		else;
+
+			return: 'invalid migration version';
+
+		/if;
+	/if;
+
+/define_tag;
+
+
+//==============================================================================
+//	->updateSchema
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'updateSchema';
+
+	local:
+		'migrationClassName'		= string,
+		'migrationVersion'			= integer,
+		'migrationObj'				= null,
+		'migrationErrors'			= array,
+		'lastMigrationSucceeded'	= true;
+
+	iterate: (self->'migrationClassNames'), #migrationClassName;
+
+		#migrationVersion = integer:((#migrationClassName->(split:'_'))->get:1);
+
+		if: #lastMigrationSucceeded
+			&& (#migrationVersion > (self->'currentVersion'))
+			&& (#migrationVersion <= (self->'migrateToVersion'));
+
+			library:((self->'classPath') + #migrationClassName + '.ctyp');
+
+			#migrationObj = (\#migrationClassName)->asType;
+
+			#migrationObj->(init: 
+				-adaptor	= (self->'adaptorName'),
+				-db			= (self->'dbName'));
+
+			#migrationObj->update;
+			#migrationErrors = #migrationObj->getErrors;
+
+			(self->'allQueryErrors')->insert: (#migrationClassName + '->update') = (#migrationObj->'queryErrors');
+			(self->'allQueryStatements')->insert: (#migrationClassName + '->update') = (#migrationObj->'queryStatements');
+
+			#lastMigrationSucceeded = self->(analyzeResultOf: #migrationErrors);
+			$message->Insert:('Last Migration Succeeded ' #lastMigrationSucceeded);
+			if: #lastMigrationSucceeded;
+				inline:
+					-database 	= (self->'dbName'),
+					-table 		= '_schemaInfo',
+					-keyField	= 'id',
+					-keyValue	= '1',
+					'version'	= #migrationVersion,
+					-update;
+					$message->Insert:('Update Schema');
+					$message->Insert:('&nbsp;&nbsp;' action_statement);
+					$message->Insert:('&nbsp;&nbsp;' error_currenterror);
+				/inline;
+			/if;
+		/if;
+	/iterate;
+
+/define_tag;
+
+
+//==============================================================================
+//	->rollbackSchema
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'rollbackSchema';
+
+	local:
+		'migrationClassName'		= string,
+		'migrationVersion'			= integer,
+		'migrationObj'				= null,
+		'migrationErrors'			= array,
+		'lastMigrationSucceeded'	= true;
+
+	iterate: (self->'migrationClassNames'), #migrationClassName;
+
+		#migrationVersion = integer:((#migrationClassName->(split:'_'))->get:1);
+
+		if: #lastMigrationSucceeded
+			&& (#migrationVersion <= (self->'currentVersion'))
+			&& (#migrationVersion > (self->'migrateToVersion'));
+
+			library:((self->'classPath') + #migrationClassName + '.ctyp');
+
+			#migrationObj = (\#migrationClassName)->asType;
+
+			#migrationObj->(init: 
+				-adaptor	= (self->'adaptorName'),
+				-db			= (self->'dbName'));
+
+			#migrationObj->rollback;
+			#migrationErrors = #migrationObj->getErrors;
+
+			(self->'allQueryErrors')->insert: (#migrationClassName + '->rollback') = (#migrationObj->'queryErrors');
+			(self->'allQueryStatements')->insert: (#migrationClassName + '->rollback') = (#migrationObj->'queryStatements');
+
+			#lastMigrationSucceeded = self->(analyzeResultOf: #migrationErrors);
+
+			if: #lastMigrationSucceeded;
+				inline:
+					-database 	= (self->'dbName'),
+					-table 		= '_schemaInfo',
+					-keyField	= 'id',
+					-keyValue	= '1',
+					'version'	= #migrationVersion-1,
+					-update;
+					$message->Insert:('RollBack Schema');
+					$message->Insert:('&nbsp;&nbsp;' action_statement);
+					$message->Insert:('&nbsp;&nbsp;' error_currenterror);
+				/inline;
+			/if;
+		/if;
+	/iterate;
+
+/define_tag;
+
+
+//==============================================================================
+//	->analyzeResultOf
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'analyzeResultOf',
+	-required = 'migrationErrors', -type = 'array';
+
+	local:
+		'thisError' = string,
+		'hasError'	= false;
+
+	iterate: #migrationErrors, #thisError;
+		#thisError !>> 'succeeded'
+			? #hasError = true;
+	/iterate;
+	
+	return: !#hasError;
+
+/define_tag;
+	
+
+//==============================================================================
+//	->showQueryStatements
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'showQueryStatements';
+
+	local:
+		'queryDisplay'		= string,
+		'thisClass'			= pair,
+		'thisClassQueries'	= array,
+		'thisError'			= pair,
+		'thisQuery'			= string;
+
+	iterate: self->'allQueryErrors', #thisClass;
+		#queryDisplay += '<h3>';
+		#queryDisplay += (#thisClass->first);
+		#queryDisplay += '</h3>';
+
+		#thisClassQueries = (self->'allQueryStatements')->get:loop_count;
+
+		iterate: #thisClass->second, #thisError;
+			#queryDisplay += '<p>';
+			#queryDisplay += #thisError;
+
+			#thisQuery = (#thisClassQueries->second)->get:loop_count;
+
+			if: #thisQuery;
+				#queryDisplay += ' : ';
+				#queryDisplay += '<span class="sqlstatement">';
+				#queryDisplay += #thisQuery;
+				#queryDisplay += '</span>';
+			/if;
+			#queryDisplay += '</p>'	;
+			
+		/iterate;
+	/iterate;
+	
+	return: #queryDisplay;
+
+/define_tag;
+/define_type;
+?>

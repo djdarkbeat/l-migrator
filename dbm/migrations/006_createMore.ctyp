@@ -1,0 +1,62 @@
+<?LassoScript
+define_type:'006_createMore', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+	define_tag:'update';
+
+//	define tblName once for multiple operations,
+//	or with -table in each operation
+	self->(addTable:	
+		-table	= 'attendees',	
+		-name	= 'ID',
+		-type	= 'int',
+		-size	= '11',
+		-autoinc=true,
+		-pkey=true);
+
+	self->'tblName' = 'attendees';
+	self->(addField:
+		-name	= 'name',
+		-type	= 'string',
+		-size	= '64');
+		
+	self->(addField:
+		-name	= 'address',
+		-type	= 'string',
+		-size	= '64');
+		
+	self->(addField:
+		-name		= 'money',
+		-type		= 'decimal',
+		-precision	= '6',
+		-scale		= '2',
+		-unsigned	= true);
+		
+	self->(addIndex:
+		-name		= 'address',
+		-field		= 'address');	
+		
+			
+	/define_tag;
+	
+
+
+
+//------------------------------------------------------------------------------
+	define_tag:'rollback';
+
+	self->'tblName' = 'attendees';
+	
+	
+		self->(removeIndex: -name = 'address');
+		self->(removeField: -name='money');
+		self->(removeField: -name='address');
+		self->(removeField: -name='name');
+		
+		self->(removeTable: -name='attendees');
+	/define_tag;
+/define_type;
+
+
+
+?>

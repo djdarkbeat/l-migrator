@@ -1,0 +1,14 @@
+﻿dbName 		= l_migrator
+migAdaptor	= mysql
+migPath 	= /dbm/migrations/
+messageOn	= yes
+#--------------------------------------------------------------------
+#	Before you can use L-Migrator, add this table to your database
+#
+#	CREATE TABLE `_schemaInfo` (
+#  	`id` int(4) unsigned NOT NULL default '0',
+#  	`version` smallint(5) unsigned NOT NULL default '0'
+#	) ENGINE=MyISAM DEFAULT CHARSET=utf8
+#
+#	INSERT INTO `_schemaInfo` (`id`,`version`) VALUES ('1','0');
+#--------------------------------------------------------------------

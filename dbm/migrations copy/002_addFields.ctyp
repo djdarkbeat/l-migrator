@@ -1,0 +1,62 @@
+﻿<?lassoscript
+
+//	file name must be same as the type name + extension
+//	example: 002_dbm_example.ctyp
+//	where 002 = the schema migration version number
+//	and the rest is any name you want to identify what it does
+
+
+define_type:'002_addFields', 'migrationCommands';
+
+//==============================================================================
+//	->update
+//	
+//	advances the schema one new higher version
+//------------------------------------------------------------------------------
+
+define_tag:'update';
+
+//	define tblName once for multiple operations,
+//	or with -table in each operation
+
+	self->'tblName' = 'myNewTable';
+	
+	self->(addField:
+		-name	= 'payee',
+		-type	= 'string',
+		-size	= '12');
+
+	self->(addField:
+		-name		= 'checkNo',
+		-type		= 'smallint',
+		-size		= '6',
+		-unsigned	= true);
+
+	self->(addField:
+		-name		= 'checkAmt',
+		-type		= 'decimal',
+		-precision	= '6',
+		-scale		= '2',
+		-unsigned	= true);
+
+/define_tag;
+
+
+//==============================================================================
+//	->rollback
+//	
+//	reverses the changes made by ->update
+//------------------------------------------------------------------------------
+
+define_tag:'rollback';
+
+	self->'tblName' = 'myNewTable';
+
+	self->(removeField: -name='checkAmt');
+	self->(removeField: -name='checkNo');
+	self->(removeField: -name='payee');
+
+/define_tag;
+
+/define_type;
+?>

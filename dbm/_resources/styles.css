@@ -1,0 +1,122 @@
+
+html, body, div, form, table, h1,h2,h3,h4,h5,h6 {
+	font-family: "Lucida Grande", Verdana, Arial, sans-serif;
+	margin: 0px;
+	padding: 0px;
+	}
+
+body {
+	font-family: "Lucida Grande", Verdana, Arial, sans-serif;
+	background-color: white;
+	color: black;
+	padding-left: 20px;
+	padding-bottom: 20px;
+	}
+
+a {
+	text-decoration: none;
+	cursor: pointer;
+	}
+
+a:hover {
+	text-decoration: none;
+	}
+
+h2,h3 {
+	padding: 20px 0 0 0;
+	}
+
+p {
+	font-size: 11px;
+	color: black;
+	}
+
+span.sqlstatement {
+	color: grey;
+	}
+
+/* @group Field Specs */
+
+.fldspecs table {
+	font-size: 11px;
+	color: black;
+	background-color: white;
+	page-break-after: always;
+	}
+
+.fldspecs table tr.hdr {
+	font-weight: bold;
+	background-color: #b0ff0a;
+	color: #000;
+	}
+
+.fldspecs table tr.altrowA {
+	background-color: #caf55e;
+	}
+
+.fldspecs table tr.altrowB {
+	background-color: #c1ff08;
+	}
+
+.fldspecs table td {
+	padding: 2px 4px 2px 4px;
+	vertical-align: middle;
+	line-height: 130%;
+	}
+
+.fldspecs table td.left {
+	text-align: left;
+	}
+
+.fldspecs table td.cntr {
+	text-align: center;
+	}
+
+.fldspecs table td.right {
+	text-align: right;
+	}
+
+.fldspecs .subtext {
+	color: #808080;
+	font-size: 10px;
+	padding-top: 3px;
+	}
+
+/* @end */
+
+/* @group Table Specs */
+
+.tblspecs table {
+	font-family: "Lucida Grande", Verdana, Arial, sans-serif;
+	font-size: 11px;
+	color: black;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	}
+
+.tblspecs tr {
+	text-align: left;
+	vertical-align: top;
+	}
+
+.tblspecs td {
+	padding: 0px;
+	}
+
+.tblspecs td.label {
+	font-weight: bold;
+	}
+
+.tblspecs td.cntr {
+	text-align: center;
+	}
+
+.tblspecs td.right {
+	text-align: right;
+	}
+
+.tblspecs td.top {
+	vertical-align: top;
+	}
+
+/* @end */

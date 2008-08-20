@@ -1,0 +1,356 @@
+﻿<?lassoscript
+
+//	migrationCommands : migration base class
+//------------------------------------------------------------------------------
+
+define_type:'migrationCommands';
+
+	local:
+		'adaptorName'		= string,
+		'dbName'			= string,
+		'tblName'			= string,
+		'queryAdaptor'		= null,
+		'queryStatements'	= array,
+		'queryErrors'		= array;
+
+
+//==============================================================================
+//	->init
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'init',
+	-required = 'adaptor',
+	-required = 'db';
+
+	(self->'adaptorName') 	= #adaptor;
+	(self->'dbName') 		= #db;
+	(self->'queryAdaptor') 	= global:($mig_gAdaptorIndex->(find:(self->'adaptorName')));
+
+/define_tag;
+
+
+//==============================================================================
+//	stub methods
+//	
+//
+//------------------------------------------------------------------------------
+define_tag:'upgrade'; 	/define_tag;
+define_tag:'downgrade'; /define_tag;
+
+
+//==============================================================================
+//	->getErrors
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'getErrors';
+	return: self->'queryErrors';
+/define_tag;
+
+
+//==============================================================================
+//	->execute
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'execute',
+	-required = 'thisQueryStatement',	-type = string,
+	-optional = 'table', 				-type = string,
+	-optional = 'operation',			-type = string,
+	-optional = 'itemName',				-type = string;
+	
+
+	!(params >> '-table')
+		? (local:'table') = (self->'tblName');
+
+	!(params >> '-operation')
+		? (local:'operation') = 'custom query';
+
+	!(params >> '-itemName')
+		? (local:'itemName') = '';
+
+	local:'executionError' = string;
+
+	(self->'queryStatements')->(insert:#thisQueryStatement);
+
+	inline:
+		-database 	= (self->'dbName'),
+		-table 		= #table,
+		-sql 		= #thisQueryStatement;
+	
+		#executionError = error_currentError;
+					$message->Insert:('SQL Schema');
+					$message->Insert:('&nbsp;&nbsp;' action_statement);
+					$message->Insert:('&nbsp;&nbsp;' error_currenterror);	
+	/inline;
+	
+	(#executionError == 'No Error')
+		? (self->'queryErrors')->(insert: #operation + ' ' + #itemName + ' succeeded')
+		| (self->'queryErrors')->(insert: #operation + ' ' + #itemName + ' failed due to ' + #executionError);
+
+/define_tag;
+
+
+//:-
+//==============================================================================
+//	->addField
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'addField',
+	-optional = 'table',	-type = string,
+	-required = 'name',		-type = string,
+	-optional = 'type',		-type = string,
+	-optional = 'size',		-type = string,
+	-optional = 'null',		-type = string,
+	-optional = 'default',	-type = string,
+	-optional = 'unsigned',	-type = string,
+	-optional = 'precision',-type = string,
+	-optional = 'scale',	-type = string,
+	-optional = 'after',	-type = string;
+
+	local:'thisQueryStatement'	= string;
+	
+	!(params->contains:'-table')
+		? params->(insert: '-table'=(self->'tblName'));
+
+	#thisQueryStatement = (self->'queryAdaptor')->(addField: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'addField',
+			-itemName  = #name);
+		
+/define_tag;
+
+
+//==============================================================================
+//	->renameField
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'renameField',
+	-optional = 'table',	-type = string,
+	-required = 'fromName',	-type = string,
+	-required = 'toName',	-type = string,
+	-required = 'type',		-type = string,
+	-optional = 'size',		-type = string,
+	-optional = 'null',		-type = string,
+	-optional = 'default',	-type = string,
+	-optional = 'unsigned',	-type = string,
+	-optional = 'precision',-type = string,
+	-optional = 'scale',	-type = string;
+
+	local:
+		'thisQueryStatement'	= string,
+		'thisQueryError'		= false;
+	
+	!(params->contains:'-table')
+		? params->(insert: '-table'=(self->'tblName'));
+
+	#thisQueryStatement = (self->'queryAdaptor')->(renameField: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'renameFieldTo',
+			-itemName  = #toName);
+			
+/define_tag;
+
+
+//==============================================================================
+//	->removeField
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'removeField',
+	-optional = 'table',	-type = string,
+	-required = 'name',		-type = string;
+
+	local:
+		'thisQueryStatement'	= string,
+		'thisQueryError'		= false;
+	
+	!(params->contains:'-table')
+		? params->(insert: '-table'=(self->'tblName'));
+
+	#thisQueryStatement = (self->'queryAdaptor')->(removeField: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'removeField',
+			-itemName  = #name);
+			
+/define_tag;
+
+
+//==============================================================================
+//	->modifyField
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'modifyField',
+	-optional = 'table',	-type = string,
+	-required = 'name',		-type = string,
+	-required = 'type',		-type = string,
+	-optional = 'size',		-type = string,
+	-optional = 'null',		-type = string,
+	-optional = 'default',	-type = string,
+	-optional = 'unsigned',	-type = string,
+	-optional = 'precision',-type = string,
+	-optional = 'scale',	-type = string;
+
+	local:
+		'thisQueryStatement'	= string,
+		'thisQueryError'		= false;
+	
+	!(params->contains:'-table')
+		? params->(insert: '-table'=(self->'tblName'));
+
+	#thisQueryStatement = (self->'queryAdaptor')->(modifyField: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'modifyFieldTo',
+			-itemName  = #name);
+			
+/define_tag;
+
+
+//:-
+//==============================================================================
+//	->createTable
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'addTable',
+	-required = 'name',		-type = string;
+
+	local:
+		'thisQueryStatement'	= string,
+		'thisQueryError'		= false;
+	
+	#thisQueryStatement = (self->'queryAdaptor')->(addTable: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'addTable',
+			-itemName  = #name);
+
+/define_tag;
+
+
+//==============================================================================
+//	->renameTable
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'renameTable',
+	-required = 'fromName',	-type = string,
+	-required = 'toName',	-type = string;
+
+	local:
+		'thisQueryStatement'	= string,
+		'thisQueryError'		= false;
+	
+	!(params->contains:'-table')
+		? params->(insert: '-table'=(self->'tblName'));
+
+	#thisQueryStatement = (self->'queryAdaptor')->(renameTable: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'renameTableTo',
+			-itemName  = #toName);
+/define_tag;
+
+
+//==============================================================================
+//	->removetable
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'removeTable',
+	-required = 'name',		-type = string;
+
+	local:
+		'thisQueryStatement'	= string,
+		'thisQueryError'		= false;
+	
+	#thisQueryStatement = (self->'queryAdaptor')->(removeTable: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'removeTable',
+			-itemName  = #name);
+
+/define_tag;
+
+
+//:-
+//==============================================================================
+//	->addIndex
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'addIndex',
+	-optional = 'table',	-type = string,
+	-required = 'name',		-type = string,
+	-optional = 'type',		-type = string,
+	-required = 'field',	-type = string,
+	-optional = 'length',	-type = string;
+
+	local:
+		'thisQueryStatement'	= string,
+		'thisQueryError'		= false;
+	
+	!(params->contains:'-table')
+		? params->(insert: '-table'=(self->'tblName'));
+
+	#thisQueryStatement = (self->'queryAdaptor')->(addIndex: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'addIndex',
+			-itemName  = #name);
+
+/define_tag;
+
+
+//==============================================================================
+//	->removeIndex
+//	
+//
+//------------------------------------------------------------------------------
+
+define_tag:'removeIndex',
+	-optional = 'table',	-type = string,
+	-required = 'name',		-type = string;
+
+	local:
+		'thisQueryStatement'	= string,
+		'thisQueryError'		= false;
+	
+	!(params->contains:'-table')
+		? params->(insert: '-table'=(self->'tblName'));
+
+	#thisQueryStatement = (self->'queryAdaptor')->(removeIndex: params);
+	
+	self->(execute: #thisQueryStatement,
+			-operation = 'removeIndex',
+			-itemName  = #name);
+
+/define_tag;
+
+/define_type;
+?>
+
+
+
+
+
+

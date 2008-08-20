@@ -1,0 +1,32 @@
+def_tag:'update';
+
+self->(addfeild:
+	-table	=	'myNewTable',
+	-name	=	'payee',
+	-type	=	'string',
+	-size	=	'12');
+
+
+
+
+
+
+
+/def_tag;
+
+
+
+
+def_tag:'rollback';
+
+
+self->(removeFiled:
+	-table = 	'myNewTable',
+	-name	=	'payee');
+
+
+
+
+
+
+/def_tag;

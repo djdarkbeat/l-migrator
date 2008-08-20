@@ -1,0 +1,42 @@
+﻿<?lassoscript
+
+//	file name must be same as the type name + extension
+//	example: 002_dbm_example.ctyp
+//	where 002 = the schema migration version number
+//	and the rest is any name you want to identify what it does
+
+define_type:'001_createTable', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+define_tag:'update';
+
+//	define tblName once for multiple operations,
+//	or with -table in each operation
+
+	self->(addTable:	
+		-table	= 'myNewTable',
+		-name	= 'rcrdNo',
+		-type	= 'string',
+		-size	= '16');
+
+	self->(addField:
+		-table	= 'myNewTable',
+		-name	= 'rcrdLock',
+		-type	= 'fixedString',
+		-size	= '1');
+
+	self->(addIndex:
+		-table		= 'myNewTable',
+		-name		= 'rcrdNo',
+		-field		= 'rcrdNo');
+
+/define_tag;
+
+//------------------------------------------------------------------------------
+define_tag:'rollback';
+
+	self->(removeTable: -name='myNewTable');
+
+/define_tag;
+/define_type;
+?>

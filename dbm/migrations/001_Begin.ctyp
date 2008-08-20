@@ -1,0 +1,22 @@
+<?LassoScript
+	define_type:'001_Begin', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+	define_tag:'update';
+
+//	define tblName once for multiple operations,
+//	or with -table in each operation
+
+
+	/define_tag;
+
+//------------------------------------------------------------------------------
+	define_tag:'rollback';
+
+
+	/define_tag;
+/define_type;
+
+
+
+?>

@@ -1,0 +1,87 @@
+<?lassoscript
+
+auth;
+
+var:'configFile' = 'migrator.cnfg';
+
+//--------------------------------------
+
+var:
+	'dbName' 		= string,
+	'migAdaptor'	= string,
+	'migPath' 		= string,
+	'configData' 	= null,
+	'thisLine'		= string,
+	'varPair'		= pair,
+	'varName'		= string,
+	'message'		= array,
+	'varValue'		= string;
+
+if: (file_exists:$configFile);
+	$message->Insert:('Config File Exists');
+	$configData = string:(file_read: $configFile);
+	$configData->(removeleading:bom_utf8);
+
+//	split lines
+
+	$configData->trim;
+	$configData = (string_replace: $configData, -find='\r\n', -replace='\r');
+	$configData = (string_replace: $configData, -find='\n', -replace='\r');
+	$configData = ($configData->(split:'\r'));
+
+//	remove comments
+
+	if: $configData && ($configData->type == 'array');
+		loop: -from=$configData->size, -to=1, -by=(-1);
+			$thisLine = $configData->(get:loop_count);
+			if: ($thisLine == '') 
+				|| ((string_findregexp: 
+					$thisLine,
+					-find='\\S+')->size == 0) 
+				|| ($thisLine >> 'output_none') 
+				|| ($thisLine->(beginswith:'#')) 
+				|| ($thisLine->(beginswith:'//'));
+	
+				$configData->(remove:loop_count);
+			/if;
+		/loop;
+	/if;	
+
+//	make vars
+
+	iterate: $configData, $varPair;
+		$varName	= ($varPair->(split:'='))->get:1;
+		$varValue	= ($varPair->(split:'='))->get:2;
+		$varName->trim;
+		$varValue->trim;
+		(var:$varName) = $varValue;
+	/iterate;
+/if;
+
+//--------------------------------------
+
+library:'/dbm/_resources/migrationEngine.ctyp';
+$message->Insert:('End of Migrations Engine');
+library:'/dbm/_resources/migrationCommands.ctyp';
+$message->Insert:('End of Migrations Commands');
+library:'/dbm/_resources/migrationAdaptor_MySQL.ctyp';
+$message->Insert:('End of Migration Adapters');
+library:'/dbm/_resources/migrationSchema.ctyp';
+$message->Insert:('End of Schema Reading');
+
+//--------------------------------------
+
+var:
+	'migrator' 			= (migrationEngine:
+							-path		= $migPath,
+							-adaptor	= $migAdaptor,
+							-db			= $dbName),
+	'runResult'			= string,
+	'tableSchemaData' 	= null,
+	'tableSchemas'		= map,
+	'thisTable' 		= string;
+
+$migrator->getCurrentVersion;
+$migrator->findMigrationLimits;
+
+?>
