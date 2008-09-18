@@ -1,0 +1,50 @@
+<?LassoScript
+define_type:'007_createVending', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+	define_tag:'update';
+
+//	define tblName once for multiple operations,
+//	or with -table in each operation
+	self->(addTable:	
+		-table	= 'vendors',	
+		-name	= 'ID',
+		-type	= 'int',
+		-size	= '11',
+		-autoinc=true,
+		-pkey=true);
+
+	self->'tblName' = 'vendors';
+	self->(addField:
+		-name	= 'popcorn',
+		-type	= 'string',
+		-size	= '64');
+		
+	self->(addField:
+		-name	= 'beer',
+		-type	= 'string',
+		-size	= '64');
+		
+	self->(addField:
+		-name	= 'nachos',
+		-type	= 'string',
+		-size	= '64');
+		
+
+
+	/define_tag;
+	
+
+
+
+//------------------------------------------------------------------------------
+	define_tag:'rollback';
+
+	
+		self->(removeTable: -name='vendors');
+	/define_tag;
+/define_type;
+
+
+
+?>
