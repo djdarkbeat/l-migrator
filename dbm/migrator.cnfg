@@ -1,7 +1,7 @@
 ﻿dbName 		= l_migrator
 migAdaptor	= mysql
 migPath 	= /dbm/migrations/
-messageOn	= yes
+messageOn	= no
 #--------------------------------------------------------------------
 #	Before you can use L-Migrator, add this table to your database
 #

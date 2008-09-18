@@ -16,16 +16,20 @@ define_tag:'update';
 	self->'tblName' = 'concerts';
 	
 	self->(addField:
-		-name	= 'date_created',
+		-name	= 'managers',
 		-type	= 'string',
 		-size	= '12');
 
 	self->(addField:
-		-name		= 'date_modified',
+		-name		= 'Bosses',
 		-type		= 'smallint',
 		-size		= '6',
 		-unsigned	= true);
-
+		self->(addField:
+		-name		= 'janitors',
+		-type		= 'smallint',
+		-size		= '6',
+		-unsigned	= true);
 
 /define_tag;
 
