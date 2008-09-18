@@ -36,7 +36,27 @@ define_type:'006_createMore', 'migrationCommands';
 		-name		= 'address',
 		-field		= 'address');	
 		
-			
+			self->(addTable:	
+		-table	= 'bands',	
+		-name	= 'ID',
+		-type	= 'int',
+		-size	= '11',
+		-autoinc=true,
+		-pkey=true);
+
+				self->(addField:
+		-name		= 'bassist',
+		-type		= 'decimal',
+		-precision	= '6',
+		-scale		= '2',
+		-unsigned	= true);
+		
+			self->(addField:
+		-name		= 'guitar',
+		-type		= 'decimal',
+		-precision	= '6',
+		-scale		= '2',
+		-unsigned	= true);
 	/define_tag;
 	
 
