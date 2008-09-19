@@ -1,0 +1,71 @@
+<?LassoScript
+define_type:'006_createVenues', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+	define_tag:'update';
+
+//	define tblName once for multiple operations,
+//	or with -table in each operation
+	self->(addTable:	
+		-table	= 'venues',	
+		-name	= 'ID',
+		-type	= 'int',
+		-size	= '11',
+		-autoinc=true,
+		-pkey=true);
+
+	self->'tblName' = 'venues';
+	self->(addField:
+		-name	= 'name',
+		-type	= 'string',
+		-size	= '64');
+		
+	self->(addField:
+		-name	= 'address',
+		-type	= 'string',
+		-size	= '64');
+		
+	self->(addField:
+		-name		= 'lease_amount',
+		-type		= 'decimal',
+		-precision	= '6',
+		-scale		= '2',
+		-unsigned	= true);
+		
+	self->(addIndex:
+		-name		= 'address',
+		-field		= 'address');	
+		
+		self->(addIndex:
+		-name		= 'name',
+		-field		= 'name');	
+			self->(execute:'INSERT INTO `artists` values ("","Joe","Strummer","Joe Strummer","","","","")');
+			self->(execute:'INSERT INTO `artists` values ("","Sid","Vicious","Sid Vicious","","","","")');
+			self->(execute:'INSERT INTO `artists` values ("","Davey","Havoc","Davey Havoc","","","","")');
+			self->(execute:'INSERT INTO `artists` values ("","David","Bowie","David Bowie","","","","")');
+			self->(execute:'INSERT INTO `artists` values ("","Brian","Eno","Brian Eno","","","","")');
+			self->(execute:'INSERT INTO `artists` values ("","Crystal","Gayle","Crystal Gayle","","","","")');
+			self->(execute:'INSERT INTO `artists` values ("","Merle","Haggard","Merle Haggard","","","","")');
+	/define_tag;
+	
+
+
+
+//------------------------------------------------------------------------------
+	define_tag:'rollback';
+
+	self->'tblName' = 'venues';
+	
+		self->(removeIndex: -name = 'address');
+		self->(removeIndex: -name = 'name');
+		self->(removeField: -name='lease_amount');
+		self->(removeField: -name='address');
+		self->(removeField: -name='name');
+		
+		self->(removeTable: -name='venues');
+	/define_tag;
+/define_type;
+
+
+
+?>

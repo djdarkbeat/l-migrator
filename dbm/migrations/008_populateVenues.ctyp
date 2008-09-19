@@ -1,0 +1,32 @@
+
+
+<?LassoScript
+define_type:'008_populateVenues', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+	define_tag:'update';
+	self->'tblName' = 'venues';
+//	define tblName once for multiple operations,
+//	or with -table in each operation
+				self->(execute:'INSERT INTO `venues` values ("","Key Arena","465 King Street","300.50")');
+				self->(execute:'INSERT INTO `venues` values ("","Bank of America Center","111 Easy Street","1250.50")');
+				self->(execute:'INSERT INTO `venues` values ("","Key Arena","465 King Street","300.50")');
+				self->(execute:'INSERT INTO `venues` values ("","Key Arena","465 King Street","300.50")');
+				self->(execute:'INSERT INTO `venues` values ("","Key Arena","465 King Street","300.50")');
+	/define_tag;
+	
+
+
+
+//------------------------------------------------------------------------------
+	define_tag:'rollback';
+
+	
+			self->(execute:'DELETE FROM `venues`');
+
+	/define_tag;
+/define_type;
+
+
+
+?>

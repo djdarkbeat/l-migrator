@@ -1,0 +1,60 @@
+﻿<?lassoscript
+//	file name must be same as the type name + extension
+//	example: 002_dbm_example.ctyp
+//	where 002 = the schema migration version number
+//	and the rest is any name you want to identify what it does
+
+define_type:'004_createArtists', 'migrationCommands';
+
+//------------------------------------------------------------------------------
+define_tag:'update';
+
+//	define tblName once for multiple operations,
+//	or with -table in each operation
+
+	self->(addTable:	
+		-table	= 'artists',
+		-name	= 'ID',
+		-type	= 'int',
+		-size	= '11',
+		-autoinc=true,
+		-pkey=true);
+		
+	self->(addField:
+		-table	= 'artists',
+		-name	= 'name_first',
+		-type	= 'string',
+		-size	= '64');
+		
+	self->(addField:
+		-table	= 'artists',
+		-name	= 'name_last',
+		-type	= 'string',
+		-size	= '64');
+
+	self->(addField:
+		-table	= 'artists',
+		-name	= 'name_stage',
+		-type	= 'string',
+		-size	= '64');
+		
+		self->(addField:
+		-table	= 'artists',
+		-name	= 'manager',
+		-type	= 'string',
+		-size	= '64');
+		
+/define_tag;
+
+//------------------------------------------------------------------------------
+define_tag:'rollback';
+	self->'tblName' = 'artists';
+	self->(removeField: -name='manager');
+	self->(removeField: -name='name_stage');
+	self->(removeField: -name='name_last');
+	self->(removeField: -name='name_first');
+	self->(removeTable: -name='artists');
+	
+/define_tag;
+/define_type;
+?>
