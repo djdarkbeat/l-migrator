@@ -16,8 +16,6 @@ define_type:'008_populateVenues', 'migrationCommands';
 	/define_tag;
 	
 
-
-
 //------------------------------------------------------------------------------
 	define_tag:'rollback';
 
